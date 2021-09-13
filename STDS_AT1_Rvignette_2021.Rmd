@@ -1,0 +1,148 @@
+---
+title: "Guided Visualisations of Numeric Data in Exploratory Data Analysis: featuring ggplot"
+
+author: "Cartier Zhi"
+
+subtitle: "14171767"
+
+date: "13/08/2021"
+
+output: 
+
+  html_document:
+        number_sections: yes
+        fig_caption: yes
+        toc: yes
+        toc_depth: '4'
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+Data visualisation presents datasets in graphical interpretations to capture the essence of data. This is particularly useful in exploratory data analysis to better describe data that cannot be interpreted directly, such as in the case of big data. Popular R package ggplot is often used due to its extensive statistical computing and data visualisation capabilities. This R vignette focuses on functions that can assist initial data exploration with a particular focus on the value ggplot provides for presenting visualisations. 
+
+# Loading the Packages
+
+To begin, first load the package ggplot and import the dataset to be visualised. The package corrplot will be used as a supplement to ggplot for visually examining correlation between variables. This exercise will utilise a dataset included in a base R package, datasets. We can use these packages by installation with install.packages() and checking the datasets box in the Packages window of RStudio, then loading the installed packages with library().
+
+```{r}
+# Installing ggplot
+#install.packages("ggplot2")
+#install.packages("corrplot")
+
+# Loading ggplot
+library(ggplot2)
+library(corrplot)
+```
+
+# Importing Data
+
+This exercise will utilise dataset airquality, a collection of daily air quality measurements in New York from May to September 1973. The function data() loads our specified dataset into an labelled object.  
+
+```{r}
+# Importing Air Quality Data
+data("airquality")
+```
+
+# Exploratory Data Analysis and Pre-Processing
+
+## Dataset Statistical Summary and Structure
+
+Initial summaries and overviews of the data can be generated via the summary() and str() functions. From these functions, we can see that all variables present are numeric as well as the missing data in variables Ozone and Solar.R. 
+
+```{r}
+# Statistical Summary
+summary(airquality)
+
+# Structure of the Data
+str(airquality)
+```
+
+## Examining Correlations
+
+We can examine the dataset for correlated variables with cor() and visualise this output with corrplot(). They allow us to quantify whether there is a significant level of collinearity between variables (above 0.7), something that will limit validity and interpretability a model's findings. A correlation matrix has been generated below for airquality (named airquality_cor), which was visualised with corrplot. From the correlation matrix it can be determined that there is no significant collinearity present. Further, the correlation between variables are visually presented in a graphical matrix.
+
+```{r}
+# Generating a Correlation Matrix
+airquality_cor <- cor(airquality)
+
+# Visualising the Correlation Matrix
+corrplot(airquality_cor)
+```
+
+## ggplot
+
+We can initialise the ggplot object with ggplot(): this is achieved below by declaring airquality as the input dataframe and the two variables plotted for each graph. 
+
+### geom_ & stat_ layers
+
+The first layer can be created with geom_ or stat_ functions which combine data, aesthetic, mapping, a geometric object (or geom), a statistical object and position adjustment. This is seen below with geom_point() and geom_boxplot(). Additional adjustments can be made with position_ functions which can be used by application to geom_ and stat_, as well as aes_ functions which alter different aspects of the plot's aesthetic. aes() is used to group data by month to create a comparative boxplot. 
+
+```{r}
+# Setting Month as a Factor
+airquality$Month <- as.factor(airquality$Month)
+
+# Relationship between Month and Wind Speed
+  ggplot(airquality) +
+    geom_boxplot(aes(Month, Wind, group = Month)) +
+    labs(title = "Plot of Month & Wind")
+
+```
+
+### Scales
+Translation of the data to its visual representation can be controlled via scales. One such scale function is labs() which enables an addition of a plot title, modification of the axis titles and legends. It has been utilised in all plots to title graphs.
+
+### Annotating
+The initial layer can be supplemented with an annotation layer with annotate() to add other geoms created from vectors. Below, annotate() is used to highlight the month with smallest range in plot of month and temperature.  
+
+```{r}
+ # Relationship between Month and Temperature
+  ggplot(airquality, aes(Month, Temp, color = Temp)) +
+    geom_point() +
+    annotate("rect", xmin = 2.5, xmax = 3.5, ymin = 73, ymax = 92, alpha = 0.2) +
+    labs(title = "Plot of Month & Temperature")
+```
+
+### Looking for Patterns 
+Other additions include application of another geom_, geom_smooth, to gain a preliminary understanding of trends in the data. In the plots of temperature with day and wind, this has been used to generate a linear regression model of the relationship between independent and dependent variables.
+
+```{r}
+# Relationship between Temperature and Wind Speed
+  ggplot(airquality, aes(Wind, Temp)) +
+    geom_point() +
+    geom_smooth(method = lm) +
+    labs(title = "Plot of Temperature & Wind")
+```
+
+### Formatting Multiple Plots and Adjusting Colours
+
+The data points showing the relationship between day and temperature was plotted in 5 separate graphs, corresponding to their respective months. This was achieved with facet_wrap() as well as scale_color_brewer() to better differentiate data into plots that are more interpretable. 
+
+```{r}
+# Relationship between Day and Temperature
+  ggplot(airquality, aes(Day, Temp, color = Month)) +
+    geom_point() +    
+    scale_color_brewer(palette = "OrRd") +
+    labs(title = "Plot of Day & Temperature") +
+    facet_wrap(~Month)
+```
+
+# Summary
+
+This vignette has demonstrated a variety of ways to create and modify basic plots from corrplot and ggplot. It included transformation of numeric data to visual graphics, formatting of plots, colour design, labelling, annotation and finding data patterns. 
+
+# References
+
+Alboukadel (2018) *The A - Z of RColorBrewer Palette*. Data Novia.
+https://www.datanovia.com/en/blog/the-a-z-of-rcolorbrewer-palette/
+
+DataCamp (n.d.) *airquality: New York Air Quality Measurements*. RDocumentation.
+https://www.rdocumentation.org/packages/datasets/versions/3.6.2/topics/airquality
+
+Dormann, C.F., Elith, J., Bacher, S., Buchmann, C., Carl, G., Carré, G., Marquéz, J.R.G., Gruber, B., Lafourcade, B., Leitão, P.J., Münkemüller, T., McClean, C., Osborne, P.E., Reineking, B., Schröder, B., Skidmore, A.K., Zurell, D. and Lautenbach, S. (2013), Collinearity: a review of methods to deal with it and a simulation study evaluating their performance. *Ecography*, 36: 27-46. https://doi.org/10.1111/j.1600-0587.2012.07348.x
+
+RStudio (n.d.) *Reference*. ggplot2. https://ggplot2.tidyverse.org/reference/
